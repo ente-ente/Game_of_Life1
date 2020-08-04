@@ -1,40 +1,99 @@
 package life;
+
 import javax.swing.*;
+import java.awt.event.ItemEvent;
 
 public class GameOfLife extends JFrame {
-    private final JLabel aliveLabel;
+    private Universe life;
     private final JLabel generationLabel;
-    private static final int size = 600;
-    private GenerationPanel generationPanel;
-    private final JPanel box;
+    private final JLabel aliveLabel;
+    private final FieldPanel fieldPanel;
+    private final JToggleButton playToggleButton;
+    private Timer timer;
 
     public GameOfLife() {
-        super("Game of Life");
+        super("Game Of Life");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(650, 750);
+        JPanel box = new JPanel();
+        JButton resetButton = new JButton("reset");
+        resetButton.setName("ResetButton");
+        resetButton.addActionListener(actionEvent -> {
+            timer.stop();
+            startAnimation();
+        });
+        playToggleButton = new JToggleButton("pause");
+        playToggleButton.setName("PlayToggleButton");
+        playToggleButton.addItemListener(itemEvent -> {
+            int state = itemEvent.getStateChange();
+            if (state == ItemEvent.SELECTED) {
+                timer.stop();
+                playToggleButton.setText("resume");
+            }
+            else {
+                playToggleButton.setText("pause");
+                timer.restart();
+            }
+        });
         JPanel header = new JPanel();
-        this.box = new JPanel();
         header.setName("Header");
         header.setLayout(new BoxLayout(header, BoxLayout.PAGE_AXIS));
-        aliveLabel = new JLabel("Generation #0");
-        generationLabel = new JLabel("Alive: 0");
+        generationLabel = new JLabel("Generation #0");
+        generationLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         generationLabel.setName("GenerationLabel");
+        header.add(generationLabel);
+
+        aliveLabel = new JLabel("Alive: 0");
+        aliveLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         aliveLabel.setName("AliveLabel");
         header.add(aliveLabel);
-        header.add(generationLabel);
+        JPanel buttonBox = new JPanel();
+        buttonBox.add(resetButton);
+        buttonBox.add(playToggleButton);
+        header.add(buttonBox);
         box.add(header);
-        this.add(box);
-        setSize(size, size + 100);
-    }
-
-    public void init(int dimension) {
-        generationPanel = new GenerationPanel(dimension, size - 10);
-        box.add(generationPanel);
+        boolean[][] state = new boolean[1][1];
+        fieldPanel = new FieldPanel(state);
+        box.add(fieldPanel);
+        add(box);
         setVisible(true);
+        startAnimation();
     }
 
-    public void update(Universe life) {
-        generationLabel.setText("Generation #" + life.getGenerationNumber());
-        aliveLabel.setText("Alive: " + life.getCurrentGeneration().getNumberOfAliveCells());
-        generationPanel.update(life.getCurrentGeneration());
+    public void startAnimation() {
+        int dimension = 150;
+        life = new Universe(dimension);
+        this.setGenerationLabel(life.getGenerationNumber());
+        this.setAliveLabel(life.getCurrentGeneration().getNumberOfAliveCells());
+        this.draw(life.getCurrentGeneration().getField());
+        this.revalidate();
+        this.repaint();
+        final int interval = 500;
+        timer = new Timer(interval, evt -> {
+            life.advance();
+            this.setGenerationLabel(life.getGenerationNumber());
+            this.setAliveLabel(life.getCurrentGeneration().getNumberOfAliveCells());
+            this.draw(life.getCurrentGeneration().getField());
+            this.revalidate();
+            this.repaint();
+        });
+        timer.start();
+    }
+
+    public void setGenerationLabel(int numOfGen) {
+        generationLabel.setText("Generation #" + numOfGen);
+    }
+
+    public void setAliveLabel(int numAlive) {
+        aliveLabel.setText("Alive: " + numAlive);
+    }
+
+    public void draw(boolean[][] state) {
+        fieldPanel.setState(state);
+        fieldPanel.repaint();
+    }
+
+    public static void main(String[] args) {
+        new GameOfLife();
     }
 }

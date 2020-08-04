@@ -2,10 +2,12 @@ package life;
 
 public class Universe {
     private Generation currentGeneration;
+    private int dimension;
     private int generationNumber;
 
     public Universe(int dimension) {
         this.currentGeneration = new Generation(dimension);
+        this.dimension = dimension;
         generationNumber = 1;
     }
 
@@ -17,10 +19,6 @@ public class Universe {
 
     public Generation getCurrentGeneration() {
         return currentGeneration;
-    }
-
-    public String toString() {
-        return "Generation #" + generationNumber + "\n" + currentGeneration.toString();
     }
 
     public int getGenerationNumber() {
